@@ -1,0 +1,19 @@
+version: 1.0
+
+description: Placeholder host-down remediation workflow invoked by PoundCake.
+
+input:
+  - host
+  - alert_group_name
+  - order_id
+
+tasks:
+  acknowledge:
+    action: core.noop
+    next:
+      - when: <% succeeded() %>
+        publish:
+          status: accepted
+
+output:
+  - status: <% ctx().status %>

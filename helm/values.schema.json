@@ -1,0 +1,938 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "poundcake",
+  "type": "object",
+  "required": ["secrets"],
+  "properties": {
+    "poundcake": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "nameOverride": {
+      "type": "string",
+      "description": "Override the chart name"
+    },
+    "fullnameOverride": {
+      "type": "string",
+      "description": "Override the full resource name"
+    },
+    "poundcakeImage": {
+      "type": "object",
+      "required": ["repository", "tag", "pullPolicy"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "default": "ghcr.io/rackerlabs/poundcake"
+        },
+        "tag": {
+          "type": "string",
+          "default": ""
+        },
+        "digest": {
+          "type": "string",
+          "default": ""
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "Never", "IfNotPresent"],
+          "default": "Always"
+        },
+        "pullSecrets": {
+          "type": "array",
+          "description": "Image pull secrets for PoundCake workloads",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" }
+                }
+              }
+            ]
+          }
+        },
+        "securityContext": {
+          "type": "object",
+          "properties": {
+            "runAsNonRoot": { "type": "boolean" },
+            "runAsUser": { "type": "integer" },
+            "allowPrivilegeEscalation": { "type": "boolean" },
+            "readOnlyRootFilesystem": { "type": "boolean", "default": false },
+            "capabilities": {
+              "type": "object",
+              "properties": {
+                "drop": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "stackstormImage": {
+      "type": "object",
+      "required": ["repository", "tag", "pullPolicy"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "default": "stackstorm/st2"
+        },
+        "tag": {
+          "type": "string",
+          "default": "3.9.0"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "Never", "IfNotPresent"],
+          "default": "IfNotPresent"
+        },
+        "securityContext": {
+          "type": "object",
+          "properties": {
+            "runAsNonRoot": { "type": "boolean" },
+            "runAsUser": { "type": "integer" },
+            "allowPrivilegeEscalation": { "type": "boolean" },
+            "readOnlyRootFilesystem": { "type": "boolean", "default": false },
+            "capabilities": {
+              "type": "object",
+              "properties": {
+                "drop": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "uiImage": {
+      "type": "object",
+      "required": ["repository", "tag", "pullPolicy"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "default": "ghcr.io/rackerlabs/poundcake-ui"
+        },
+        "tag": {
+          "type": "string",
+          "default": ""
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "Never", "IfNotPresent"],
+          "default": "IfNotPresent"
+        },
+        "containerPort": {
+          "type": "integer",
+          "default": 8080
+        },
+        "runtimeWritablePaths": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true }
+          }
+        },
+        "securityContext": {
+          "type": "object",
+          "properties": {
+            "runAsNonRoot": { "type": "boolean" },
+            "runAsUser": { "type": "integer" },
+            "allowPrivilegeEscalation": { "type": "boolean" },
+            "readOnlyRootFilesystem": { "type": "boolean", "default": false },
+            "capabilities": {
+              "type": "object",
+              "properties": {
+                "drop": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "images": {
+      "type": "object",
+      "properties": {
+        "mariadb": { "type": "string" },
+        "mongodb": { "type": "string" },
+        "rabbitmq": { "type": "string" },
+        "redis": { "type": "string" },
+        "alpine": { "type": "string" },
+        "busybox": { "type": "string" },
+        "kubectl": { "type": "string" }
+      }
+    },
+    "utilitySecurityContext": {
+      "type": "object",
+      "description": "Container security context for utility/init containers and startup jobs",
+      "properties": {
+        "runAsNonRoot": { "type": "boolean", "default": true },
+        "runAsUser": { "type": "integer", "default": 1000 },
+        "allowPrivilegeEscalation": { "type": "boolean", "default": false },
+        "readOnlyRootFilesystem": { "type": "boolean", "default": false },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "drop": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "secrets": {
+      "type": "object",
+      "required": [
+        "dbRootPassword",
+        "dbName",
+        "dbMigratorUser",
+        "dbMigratorPassword",
+        "dbApiUser",
+        "dbApiPassword",
+        "dbCredentialManagerUser",
+        "dbCredentialManagerPassword",
+        "dbWorkerReaderUser",
+        "dbWorkerReaderPassword",
+        "dbReadonlyUser",
+        "dbReadonlyPassword",
+        "mongoRootPassword",
+        "mongoUsername",
+        "mongoPassword",
+        "rabbitmqUser",
+        "rabbitmqPassword",
+        "st2AuthUser",
+        "st2AuthPassword"
+      ],
+      "properties": {
+        "dbRootPassword": {
+          "type": "string",
+          "description": "Root password for MySQL/MariaDB"
+        },
+        "dbName": {
+          "type": "string",
+          "default": "poundcake"
+        },
+        "dbMigratorUser": {
+          "type": "string",
+          "default": "poundcake_migrator"
+        },
+        "dbMigratorPassword": {
+          "type": "string",
+          "description": "Migrator database user password"
+        },
+        "dbApiUser": {
+          "type": "string",
+          "default": "poundcake_api"
+        },
+        "dbApiPassword": {
+          "type": "string",
+          "description": "API database user password"
+        },
+        "dbCredentialManagerUser": {
+          "type": "string",
+          "default": "poundcake_credential_manager"
+        },
+        "dbCredentialManagerPassword": {
+          "type": "string",
+          "description": "Credential Manager database user password"
+        },
+        "dbWorkerReaderUser": {
+          "type": "string",
+          "default": "poundcake_worker_reader"
+        },
+        "dbWorkerReaderPassword": {
+          "type": "string",
+          "description": "Worker reader database user password"
+        },
+        "dbReadonlyUser": {
+          "type": "string",
+          "default": "poundcake_readonly"
+        },
+        "dbReadonlyPassword": {
+          "type": "string",
+          "description": "Readonly database user password"
+        },
+        "mongoRootPassword": {
+          "type": "string",
+          "description": "Root password for MongoDB"
+        },
+        "mongoUsername": {
+          "type": "string",
+          "default": "stackstorm"
+        },
+        "mongoPassword": {
+          "type": "string",
+          "description": "MongoDB user password"
+        },
+        "rabbitmqUser": {
+          "type": "string",
+          "default": "stackstorm"
+        },
+        "rabbitmqPassword": {
+          "type": "string",
+          "description": "RabbitMQ user password"
+        },
+        "st2AuthUser": {
+          "type": "string",
+          "default": "st2admin"
+        },
+        "st2AuthPassword": {
+          "type": "string",
+          "description": "StackStorm authentication password"
+        }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "properties": {
+        "storageClassName": {
+          "type": "string",
+          "description": "Default storage class for all PVCs"
+        },
+        "mariadb": {
+          "type": "object",
+          "properties": {
+            "size": { "type": "string" },
+            "accessMode": { "type": "string" },
+            "storageClassName": { "type": "string" }
+          }
+        },
+        "mongo": {
+          "type": "object",
+          "properties": {
+            "size": { "type": "string" },
+            "accessMode": { "type": "string" },
+            "storageClassName": { "type": "string" }
+          }
+        },
+        "rabbitmq": {
+          "type": "object",
+          "properties": {
+            "size": { "type": "string" },
+            "accessMode": { "type": "string" },
+            "storageClassName": { "type": "string" }
+          }
+        },
+        "redis": {
+          "type": "object",
+          "properties": {
+            "size": { "type": "string" },
+            "accessMode": { "type": "string" },
+            "storageClassName": { "type": "string" }
+          }
+        },
+        "stackstormPacks": {
+          "type": "object",
+          "description": "Shared volume for PoundCake-generated StackStorm pack content",
+          "properties": {
+            "size": { "type": "string" },
+            "accessMode": { "type": "string" },
+            "storageClassName": { "type": "string" }
+          }
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "size": { "type": "string" },
+            "accessMode": { "type": "string" },
+            "storageClassName": { "type": "string" }
+          }
+        },
+        "stackstormSharedStorage": {
+          "type": "object",
+          "description": "Shared RWX storage for third-party StackStorm packs and virtualenvs",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "accessMode": { "type": "string" },
+            "storageClassName": { "type": "string" },
+            "packVolumeSize": { "type": "string" },
+            "virtualenvVolumeSize": { "type": "string" }
+          }
+        }
+      }
+    },
+    "longhorn": {
+      "type": "object",
+      "properties": {
+        "rwxStorageClass": {
+          "type": "object",
+          "properties": {
+            "create": { "type": "boolean" },
+            "name": { "type": "string" },
+            "isDefaultClass": { "type": "boolean" },
+            "numberOfReplicas": { "type": "string" },
+            "staleReplicaTimeout": { "type": "string" },
+            "fsType": { "type": "string" },
+            "dataLocality": { "type": "string" },
+            "migratable": { "type": "string" },
+            "reclaimPolicy": { "type": "string" },
+            "volumeBindingMode": { "type": "string" },
+            "allowVolumeExpansion": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "servicePluginRbac": {
+      "type": "object",
+      "description": "Cluster API permissions granted to the PoundCake service account for external service plugins.",
+      "properties": {
+        "prometheusRules": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    },
+    "services": {
+      "type": "object",
+      "properties": {
+        "api": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "port": { "type": "integer" },
+            "publishNotReadyAddresses": { "type": "boolean", "default": true }
+          }
+        },
+        "ui": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "port": { "type": "integer" }
+          }
+        },
+        "stackstormApi": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "port": { "type": "integer" }
+          }
+        },
+        "stackstormAuth": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "port": { "type": "integer" }
+          }
+        },
+        "stackstormStream": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "port": { "type": "integer" }
+          }
+        },
+        "stackstormWeb": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "port": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "stackstormApi": {
+      "type": "object",
+      "properties": {
+        "readiness": {
+          "type": "object",
+          "properties": {
+            "initialDelaySeconds": { "type": "integer", "minimum": 0, "default": 5 }
+          }
+        }
+      }
+    },
+    "stackstorm": {
+      "type": "object",
+      "properties": {
+        "releaseName": { "type": "string", "default": "" },
+        "url": { "type": "string", "default": "" },
+        "authUrl": { "type": "string", "default": "" },
+        "verifySsl": { "type": "boolean", "default": false },
+        "apiKeySecretName": { "type": "string", "default": "" },
+        "apiKeySecretKey": { "type": "string", "default": "api-key" },
+        "autoDiscover": { "type": "boolean", "default": true },
+        "discoverAcrossNamespaces": { "type": "boolean", "default": true },
+        "adminUser": { "type": "string", "default": "st2admin" },
+        "adminPassword": { "type": "string", "default": "" },
+        "adminPasswordSecret": { "type": "string", "default": "" },
+        "adminPasswordSecretKey": { "type": "string", "default": "ST2_AUTH_PASSWORD" },
+        "resourceNames": {
+          "type": "object",
+          "properties": {
+            "mongodb": { "type": "string", "default": "st2-mongodb" },
+            "rabbitmq": { "type": "string", "default": "st2-rabbitmq" },
+            "redis": { "type": "string", "default": "st2-redis" }
+          }
+        },
+        "bootstrap": {
+          "type": "object",
+          "properties": {
+            "packs": {
+              "type": "object",
+              "properties": {
+                "kubernetes": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": { "type": "boolean", "default": false },
+                    "version": { "type": "string", "default": "" },
+                    "source": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["exchange", "git"], "default": "exchange" },
+                        "name": { "type": "string", "default": "kubernetes" },
+                        "repoUrl": { "type": "string", "default": "" }
+                      }
+                    },
+                    "runtime": {
+                      "type": "object",
+                      "properties": {
+                        "seedDatastore": { "type": "boolean", "default": true },
+                        "host": { "type": "string", "default": "https://cluster.local" },
+                        "verifySsl": { "type": "boolean", "default": false }
+                      }
+                    },
+                    "config": {
+                      "type": "object",
+                      "properties": {
+                        "kubeconfig": { "type": "string", "default": "" },
+                        "caCert": { "type": "string", "default": "" }
+                      }
+                    }
+                  }
+                },
+                "openstack": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": { "type": "boolean", "default": false },
+                    "version": { "type": "string", "default": "" },
+                    "source": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["exchange", "git"], "default": "exchange" },
+                        "name": { "type": "string", "default": "openstack" },
+                        "repoUrl": { "type": "string", "default": "" }
+                      }
+                    },
+                    "config": {
+                      "type": "object",
+                      "properties": {
+                        "cloudsYaml": { "type": "string", "default": "" },
+                        "caCert": { "type": "string", "default": "" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "poundcakeApi": {
+      "type": "object",
+      "properties": {
+        "readiness": {
+          "type": "object",
+          "properties": {
+            "initialDelaySeconds": { "type": "integer", "minimum": 0, "default": 5 }
+          }
+        }
+      }
+    },
+    "gateway": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "className": { "type": "string", "default": "envoyproxy" },
+        "name": { "type": "string", "default": "poundcake-gateway" },
+        "listeners": {
+          "type": "object",
+          "properties": {
+            "api": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean", "default": true },
+                "hostname": { "type": "string", "default": "api.poundcake.local" },
+                "port": { "type": "integer", "default": 80 },
+                "protocol": {
+                  "type": "string",
+                  "enum": ["HTTP", "HTTPS"],
+                  "default": "HTTP"
+                },
+                "tls": {
+                  "type": "object",
+                  "properties": {
+                    "mode": { "type": "string", "default": "Terminate" },
+                    "secretName": { "type": "string", "default": "" }
+                  }
+                },
+                "pathPrefix": { "type": "string", "default": "/" }
+              }
+            },
+            "ui": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean", "default": true },
+                "hostname": { "type": "string", "default": "ui.poundcake.local" },
+                "port": { "type": "integer", "default": 80 },
+                "protocol": {
+                  "type": "string",
+                  "enum": ["HTTP", "HTTPS"],
+                  "default": "HTTP"
+                },
+                "tls": {
+                  "type": "object",
+                  "properties": {
+                    "mode": { "type": "string", "default": "Terminate" },
+                    "secretName": { "type": "string", "default": "" }
+                  }
+                },
+                "pathPrefix": { "type": "string", "default": "/" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "stackstormComponents": {
+      "type": "object",
+      "description": "Optional StackStorm component toggles",
+      "properties": {
+        "register": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false }
+          }
+        },
+        "stream": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false }
+          }
+        },
+        "web": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false }
+          }
+        },
+        "client": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false }
+          }
+        }
+      }
+    },
+    "stackstormServices": {
+      "type": "object",
+      "description": "StackStorm service profile toggles (required and optional components)",
+      "properties": {
+        "mongodb": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": true } } },
+        "rabbitmq": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": true } } },
+        "redis": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": true } } },
+        "auth": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": true } } },
+        "api": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": true } } },
+        "actionrunner": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": true } } },
+        "rulesengine": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": true } } },
+        "workflowengine": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": true } } },
+        "scheduler": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": true } } },
+        "notifier": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": false } } },
+        "garbagecollector": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": true } } },
+        "timersengine": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": false } } },
+        "sensorcontainer": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": false } } },
+        "register": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": false } } },
+        "stream": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": false } } },
+        "web": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": false } } },
+        "client": { "type": "object", "properties": { "enabled": { "type": "boolean", "default": false } } }
+      }
+    },
+    "stackstormActionrunner": {
+      "type": "object",
+      "properties": {
+        "serviceAccount": {
+          "type": "object",
+          "properties": {
+            "create": { "type": "boolean", "default": true },
+            "annotations": { "type": "object" },
+            "name": { "type": "string", "default": "" }
+          }
+        },
+        "pvcPatchRbac": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true }
+          }
+        },
+        "workloadRecycleRbac": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    },
+    "prepChef": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "replicaCount": { "type": "integer", "default": 1, "minimum": 0 },
+        "interval": { "type": "integer", "default": 5, "minimum": 1 }
+      }
+    },
+    "timer": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "replicaCount": { "type": "integer", "default": 1, "minimum": 0 },
+        "interval": { "type": "integer", "default": 10, "minimum": 1 },
+        "slaBufferPercent": { "type": "number", "default": 0.2, "minimum": 0 },
+        "incidentReconcileIntervalSeconds": { "type": "integer", "default": 30, "minimum": 1 },
+        "incidentReconcileLimit": { "type": "integer", "default": 25, "minimum": 1 }
+      }
+    },
+    "dishwasher": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "replicaCount": { "type": "integer", "default": 1, "minimum": 0 },
+        "interval": { "type": "integer", "default": 300, "minimum": 1 },
+        "defaultDuration": { "type": "integer", "default": 60, "minimum": 1 },
+        "defaultTimeout": { "type": "integer", "default": 300, "minimum": 1 },
+        "pruneMissing": { "type": "boolean", "default": false }
+      }
+    },
+    "bootstrap": {
+      "type": "object",
+      "properties": {
+        "ingredientsDir": { "type": "string", "default": "/app/bootstrap/ingredients" },
+        "recipesDir": { "type": "string", "default": "/app/bootstrap/recipes" },
+        "remoteSyncEnabled": { "type": "boolean", "default": true },
+        "rulesRepoUrl": {
+          "type": "string",
+          "default": ""
+        },
+        "rulesBranch": { "type": "string", "default": "main" },
+        "rulesPath": { "type": "string", "default": "alerts" },
+        "poundcakeBootstrap": {
+          "type": "object",
+          "properties": {
+            "defaultDuration": { "type": "integer", "default": 60 },
+            "defaultTimeout": { "type": "integer", "default": 300 },
+            "pruneMissing": { "type": "boolean", "default": false }
+          }
+        }
+      }
+    },
+    "intervals": {
+      "type": "object",
+      "properties": {
+        "prepChef": { "type": "string" },
+        "timer": { "type": "string" },
+        "dishwasher": { "type": "string" },
+        "prepInterval": { "type": "string" }
+      }
+    },
+    "logFormat": {
+      "type": "string",
+      "default": "console"
+    },
+    "resources": {
+      "type": "object",
+      "description": "Resource requests and limits for containers"
+    },
+    "nodeSelector": {
+      "type": "object",
+      "description": "Node selector for pod placement",
+      "default": {
+        "node-role.kubernetes.io/worker": "worker"
+      }
+    },
+    "tolerations": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Tolerations for pod placement"
+    },
+    "affinity": {
+      "type": "object",
+      "description": "Affinity rules for pod placement"
+    },
+    "defaultResources": {
+      "type": "object",
+      "properties": {
+        "requests": {
+          "type": "object",
+          "properties": {
+            "cpu": { "type": "string" },
+            "memory": { "type": "string" }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "cpu": { "type": "string" },
+            "memory": { "type": "string" }
+          }
+        }
+      }
+    },
+    "podSecurityContext": {
+      "type": "object",
+      "description": "Security context for all pods",
+      "properties": {
+        "runAsNonRoot": { "type": "boolean" },
+        "runAsUser": { "type": "integer" },
+        "runAsGroup": { "type": "integer" },
+        "fsGroup": { "type": "integer" },
+        "fsGroupChangePolicy": { "type": "string" },
+        "supplementalGroups": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "seccompProfile": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" }
+          }
+        }
+      }
+    },
+    "stackstormPodSecurityContext": {
+      "type": "object",
+      "description": "Pod security context override for StackStorm workloads and startup jobs",
+      "properties": {
+        "runAsNonRoot": { "type": "boolean" },
+        "runAsUser": { "type": "integer" },
+        "runAsGroup": { "type": "integer" },
+        "fsGroup": { "type": "integer" },
+        "fsGroupChangePolicy": { "type": "string" },
+        "supplementalGroups": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "seccompProfile": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" }
+          }
+        }
+      }
+    },
+    "infraSecurityContext": {
+      "type": "object",
+      "description": "Container security contexts for infrastructure services",
+      "properties": {
+        "mariadb": {
+          "type": "object",
+          "properties": {
+            "runAsNonRoot": { "type": "boolean" },
+            "runAsUser": { "type": "integer", "default": 1000 },
+            "allowPrivilegeEscalation": { "type": "boolean" },
+            "readOnlyRootFilesystem": { "type": "boolean" },
+            "capabilities": {
+              "type": "object",
+              "properties": {
+                "drop": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "mongodb": {
+          "type": "object",
+          "properties": {
+            "runAsNonRoot": { "type": "boolean" },
+            "runAsUser": { "type": "integer", "default": 1000 },
+            "allowPrivilegeEscalation": { "type": "boolean" },
+            "readOnlyRootFilesystem": { "type": "boolean" },
+            "capabilities": {
+              "type": "object",
+              "properties": {
+                "drop": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "rabbitmq": {
+          "type": "object",
+          "properties": {
+            "runAsNonRoot": { "type": "boolean" },
+            "runAsUser": { "type": "integer", "default": 1000 },
+            "allowPrivilegeEscalation": { "type": "boolean" },
+            "readOnlyRootFilesystem": { "type": "boolean" },
+            "capabilities": {
+              "type": "object",
+              "properties": {
+                "drop": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "redis": {
+          "type": "object",
+          "properties": {
+            "runAsNonRoot": { "type": "boolean" },
+            "runAsUser": { "type": "integer", "default": 1000 },
+            "allowPrivilegeEscalation": { "type": "boolean" },
+            "readOnlyRootFilesystem": { "type": "boolean" },
+            "capabilities": {
+              "type": "object",
+              "properties": {
+                "drop": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "startupHooks": {
+      "type": "object",
+      "description": "Startup hook cleanup behavior",
+      "properties": {
+        "parallelWait": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "failFast": { "type": "boolean", "default": true },
+            "timeout": {
+              "type": "string",
+              "description": "kubectl wait timeout for startup gate checks",
+              "default": "15m"
+            }
+          }
+        },
+        "gateLogging": {
+          "type": "object",
+          "description": "Logging controls for startup and init-container gate waits",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "intervalSeconds": { "type": "integer", "default": 30, "minimum": 1 },
+            "prefix": { "type": "string", "default": "[gate]" }
+          }
+        },
+        "cleanup": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "deleteSuccessful": { "type": "boolean", "default": true },
+            "deleteFailed": { "type": "boolean", "default": false }
+          }
+        }
+      }
+    },
+    "pdb": {
+      "type": "object",
+      "description": "Pod disruption budget configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  }
+}
