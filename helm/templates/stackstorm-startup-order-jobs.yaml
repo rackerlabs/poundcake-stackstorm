@@ -1,0 +1,573 @@
+{{- if .Values.stackstorm.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stackstorm-mongodb-user-sync
+  labels:
+    app.kubernetes.io/component: stackstorm-mongodb-user-sync
+    {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: stackstorm-mongodb-user-sync
+        {{- include "poundcakeStackstorm.logLabelsForComponent" (dict "component" "stackstorm-mongodb-user-sync") | nindent 8 }}
+        {{- include "poundcakeStackstorm.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- $stackstormPodSecurityContext := include "poundcakeStackstorm.stackstormPodSecurityContext" . }}
+      {{- if $stackstormPodSecurityContext }}
+      securityContext:
+        {{- $stackstormPodSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- include "poundcakeStackstorm.podPlacement" . | nindent 6 }}
+      serviceAccountName: poundcake-stackstorm-startup
+      restartPolicy: OnFailure
+      initContainers:
+        - name: sync-user
+          image: {{ .Values.images.mongodb }}
+          securityContext:
+            {{- toYaml .Values.utilitySecurityContext | nindent 12 }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+
+              echo "Waiting for MongoDB..."
+              until mongosh --host stackstorm-mongodb --quiet --eval "db.adminCommand('ping').ok" 2>/dev/null | grep -q 1; do
+                sleep 2
+              done
+
+              MONGO_URI="mongodb://admin:${MONGO_ROOT_PASSWORD}@stackstorm-mongodb:27017/admin"
+              echo "Ensuring StackStorm MongoDB user exists and password is current..."
+
+              mongosh "${MONGO_URI}" --quiet --eval "
+                const upsert = function(dbName, roles) {
+                  try {
+                    db.getSiblingDB(dbName).createUser({
+                      user: '${MONGO_USERNAME}',
+                      pwd: '${MONGO_PASSWORD}',
+                      roles: roles
+                    });
+                    print('created:' + dbName);
+                  } catch (e) {
+                    if (e.codeName === 'DuplicateKey' || /already exists/.test(e.message)) {
+                      db.getSiblingDB(dbName).updateUser('${MONGO_USERNAME}', {
+                        pwd: '${MONGO_PASSWORD}',
+                        roles: roles
+                      });
+                      print('updated:' + dbName);
+                    } else {
+                      throw e;
+                    }
+                  }
+                };
+
+                // Keep a user in st2 DB for explicit authSource=st2.
+                upsert('st2', [{role: 'dbOwner', db: 'st2'}]);
+                // Also keep a user in admin DB for clients that auth against admin.
+                upsert('admin', [{role: 'dbOwner', db: 'st2'}]);
+              "
+
+              echo "Validating StackStorm Mongo credentials..."
+              until mongosh "mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@stackstorm-mongodb:27017/st2?authSource=st2" --quiet --eval "db.runCommand({ping:1}).ok" 2>/dev/null | grep -q 1; do
+                sleep 2
+              done
+              until mongosh "mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@stackstorm-mongodb:27017/st2?authSource=admin" --quiet --eval "db.runCommand({ping:1}).ok" 2>/dev/null | grep -q 1; do
+                sleep 2
+              done
+          env:
+            - name: MONGO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: stackstorm-secrets
+                  key: MONGO_ROOT_PASSWORD
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: stackstorm-secrets
+                  key: MONGO_USERNAME
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: stackstorm-secrets
+                  key: MONGO_PASSWORD
+      containers:
+        - name: mark-user-ready
+          image: {{ .Values.images.kubectl }}
+          securityContext:
+            {{- toYaml .Values.utilitySecurityContext | nindent 12 }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              NS="{{ .Release.Namespace }}"
+              kubectl -n "${NS}" patch secret stackstorm-startup-markers --type merge \
+                -p '{"stringData":{"stackstorm_mongodb_user_ready":"true"}}'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stackstorm-infra-ready
+  labels:
+    app.kubernetes.io/component: stackstorm-infra-ready
+    {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "20"
+    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: stackstorm-infra-ready
+        {{- include "poundcakeStackstorm.logLabelsForComponent" (dict "component" "stackstorm-infra-ready") | nindent 8 }}
+        {{- include "poundcakeStackstorm.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- $stackstormPodSecurityContext := include "poundcakeStackstorm.stackstormPodSecurityContext" . }}
+      {{- if $stackstormPodSecurityContext }}
+      securityContext:
+        {{- $stackstormPodSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- include "poundcakeStackstorm.podPlacement" . | nindent 6 }}
+      restartPolicy: OnFailure
+      serviceAccountName: poundcake-stackstorm-startup
+      containers:
+        - name: wait-infra
+          image: {{ .Values.images.kubectl }}
+          securityContext:
+            {{- toYaml .Values.utilitySecurityContext | nindent 12 }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              NS="{{ .Release.Namespace }}"
+              {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
+              PARALLEL_ENABLED="{{ ternary "true" "false" .Values.startupHooks.parallelWait.enabled }}"
+              FAIL_FAST="{{ ternary "true" "false" .Values.startupHooks.parallelWait.failFast }}"
+              services="stackstorm-mongodb stackstorm-rabbitmq stackstorm-redis"
+
+              wait_for_service_endpoint() {
+                svc="$1"
+                gate_log_wait_start "stackstorm-infra-${svc}" "service endpoint ${svc}"
+                until [ -n "$(kubectl -n "${NS}" get endpoints "${svc}" -o jsonpath='{.subsets[0].addresses[0].ip}' 2>/dev/null || true)" ]; do
+                  gate_log_wait_tick "stackstorm-infra-${svc}" "service endpoint ${svc}"
+                  sleep 2
+                done
+                gate_log_wait_ready "stackstorm-infra-${svc}"
+              }
+
+              if [ "${PARALLEL_ENABLED}" = "true" ]; then
+                pids=""
+                status=0
+                for svc in ${services}; do
+                  wait_for_service_endpoint "${svc}" &
+                  pids="${pids} $!"
+                done
+
+                for pid in ${pids}; do
+                  if ! wait "${pid}"; then
+                    status=1
+                    if [ "${FAIL_FAST}" = "true" ]; then
+                      exit 1
+                    fi
+                  fi
+                done
+                [ "${status}" -eq 0 ] || exit 1
+              else
+                for svc in ${services}; do
+                  wait_for_service_endpoint "${svc}"
+                done
+              fi
+              kubectl -n "${NS}" patch secret stackstorm-startup-markers --type merge \
+                -p '{"stringData":{"stackstorm_infra_ready":"true"}}'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stackstorm-controlplane-ready
+  labels:
+    app.kubernetes.io/component: stackstorm-controlplane-ready
+    {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "30"
+    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: stackstorm-controlplane-ready
+        {{- include "poundcakeStackstorm.logLabelsForComponent" (dict "component" "stackstorm-controlplane-ready") | nindent 8 }}
+        {{- include "poundcakeStackstorm.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- $stackstormPodSecurityContext := include "poundcakeStackstorm.stackstormPodSecurityContext" . }}
+      {{- if $stackstormPodSecurityContext }}
+      securityContext:
+        {{- $stackstormPodSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- include "poundcakeStackstorm.podPlacement" . | nindent 6 }}
+      restartPolicy: OnFailure
+      serviceAccountName: poundcake-stackstorm-startup
+      containers:
+        - name: mark-controlplane-ready
+          image: {{ .Values.images.kubectl }}
+          securityContext:
+            {{- toYaml .Values.utilitySecurityContext | nindent 12 }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              NS="{{ .Release.Namespace }}"
+              {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
+              PARALLEL_ENABLED="{{ ternary "true" "false" .Values.startupHooks.parallelWait.enabled }}"
+              FAIL_FAST="{{ ternary "true" "false" .Values.startupHooks.parallelWait.failFast }}"
+              WAIT_TIMEOUT="{{ .Values.startupHooks.parallelWait.timeout }}"
+              deployments="deployment/stackstorm-auth deployment/stackstorm-api{{- if eq (include "poundcakeStackstorm.stackstormServiceEnabled" (dict "root" . "name" "register")) "true" }} deployment/stackstorm-register{{- end }}"
+
+              wait_for_deployment() {
+                target="$1"
+                gate_log_wait_start "stackstorm-controlplane-${target#deployment/}" "deployment availability ${target}"
+                if kubectl -n "${NS}" wait --for=condition=Available "${target}" --timeout="${WAIT_TIMEOUT}"; then
+                  gate_log_wait_ready "stackstorm-controlplane-${target#deployment/}"
+                else
+                  gate_log_wait_tick "stackstorm-controlplane-${target#deployment/}" "deployment availability ${target}"
+                  return 1
+                fi
+              }
+
+              if [ "${PARALLEL_ENABLED}" = "true" ]; then
+                pids=""
+                status=0
+                for target in ${deployments}; do
+                  wait_for_deployment "${target}" &
+                  pids="${pids} $!"
+                done
+
+                for pid in ${pids}; do
+                  if ! wait "${pid}"; then
+                    status=1
+                    if [ "${FAIL_FAST}" = "true" ]; then
+                      exit 1
+                    fi
+                  fi
+                done
+                [ "${status}" -eq 0 ] || exit 1
+              else
+                for target in ${deployments}; do
+                  wait_for_deployment "${target}"
+                done
+              fi
+              kubectl -n "${NS}" patch secret stackstorm-startup-markers --type merge \
+                -p '{"stringData":{"stackstorm_controlplane_ready":"true"}}'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stackstorm-workers-ready
+  labels:
+    app.kubernetes.io/component: stackstorm-workers-ready
+    {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "40"
+    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: stackstorm-workers-ready
+        {{- include "poundcakeStackstorm.logLabelsForComponent" (dict "component" "stackstorm-workers-ready") | nindent 8 }}
+        {{- include "poundcakeStackstorm.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- $stackstormPodSecurityContext := include "poundcakeStackstorm.stackstormPodSecurityContext" . }}
+      {{- if $stackstormPodSecurityContext }}
+      securityContext:
+        {{- $stackstormPodSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- include "poundcakeStackstorm.podPlacement" . | nindent 6 }}
+      restartPolicy: OnFailure
+      serviceAccountName: poundcake-stackstorm-startup
+      containers:
+        - name: wait-workers
+          image: {{ .Values.images.kubectl }}
+          securityContext:
+            {{- toYaml .Values.utilitySecurityContext | nindent 12 }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              NS="{{ .Release.Namespace }}"
+              {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
+              PARALLEL_ENABLED="{{ ternary "true" "false" .Values.startupHooks.parallelWait.enabled }}"
+              FAIL_FAST="{{ ternary "true" "false" .Values.startupHooks.parallelWait.failFast }}"
+              WAIT_TIMEOUT="{{ .Values.startupHooks.parallelWait.timeout }}"
+              deployments="deployment/stackstorm-actionrunner deployment/stackstorm-rulesengine deployment/stackstorm-workflowengine deployment/stackstorm-scheduler deployment/stackstorm-garbagecollector{{- if eq (include "poundcakeStackstorm.stackstormServiceEnabled" (dict "root" . "name" "client")) "true" }} deployment/stackstorm-client{{- end }}{{- if eq (include "poundcakeStackstorm.stackstormServiceEnabled" (dict "root" . "name" "notifier")) "true" }} deployment/stackstorm-notifier{{- end }}{{- if eq (include "poundcakeStackstorm.stackstormServiceEnabled" (dict "root" . "name" "timersengine")) "true" }} deployment/stackstorm-timersengine{{- end }}"
+
+              wait_for_deployment() {
+                target="$1"
+                gate_log_wait_start "stackstorm-workers-${target#deployment/}" "deployment availability ${target}"
+                if kubectl -n "${NS}" wait --for=condition=Available "${target}" --timeout="${WAIT_TIMEOUT}"; then
+                  gate_log_wait_ready "stackstorm-workers-${target#deployment/}"
+                else
+                  gate_log_wait_tick "stackstorm-workers-${target#deployment/}" "deployment availability ${target}"
+                  return 1
+                fi
+              }
+
+              if [ "${PARALLEL_ENABLED}" = "true" ]; then
+                pids=""
+                status=0
+                for target in ${deployments}; do
+                  wait_for_deployment "${target}" &
+                  pids="${pids} $!"
+                done
+
+                for pid in ${pids}; do
+                  if ! wait "${pid}"; then
+                    status=1
+                    if [ "${FAIL_FAST}" = "true" ]; then
+                      exit 1
+                    fi
+                  fi
+                done
+                [ "${status}" -eq 0 ] || exit 1
+              else
+                for target in ${deployments}; do
+                  wait_for_deployment "${target}"
+                done
+              fi
+              kubectl -n "${NS}" patch secret stackstorm-startup-markers --type merge \
+                -p '{"stringData":{"stackstorm_workers_ready":"true"}}'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stackstorm-edge-ready
+  labels:
+    app.kubernetes.io/component: stackstorm-edge-ready
+    {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "50"
+    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: stackstorm-edge-ready
+        {{- include "poundcakeStackstorm.logLabelsForComponent" (dict "component" "stackstorm-edge-ready") | nindent 8 }}
+        {{- include "poundcakeStackstorm.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- $stackstormPodSecurityContext := include "poundcakeStackstorm.stackstormPodSecurityContext" . }}
+      {{- if $stackstormPodSecurityContext }}
+      securityContext:
+        {{- $stackstormPodSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- include "poundcakeStackstorm.podPlacement" . | nindent 6 }}
+      restartPolicy: OnFailure
+      serviceAccountName: poundcake-stackstorm-startup
+      containers:
+        - name: wait-edge
+          image: {{ .Values.images.kubectl }}
+          securityContext:
+            {{- toYaml .Values.utilitySecurityContext | nindent 12 }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              NS="{{ .Release.Namespace }}"
+              {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
+              PARALLEL_ENABLED="{{ ternary "true" "false" .Values.startupHooks.parallelWait.enabled }}"
+              FAIL_FAST="{{ ternary "true" "false" .Values.startupHooks.parallelWait.failFast }}"
+              WAIT_TIMEOUT="{{ .Values.startupHooks.parallelWait.timeout }}"
+              deployments="{{- if eq (include "poundcakeStackstorm.stackstormServiceEnabled" (dict "root" . "name" "sensorcontainer")) "true" }}deployment/stackstorm-sensorcontainer{{- end }}{{- if eq (include "poundcakeStackstorm.stackstormServiceEnabled" (dict "root" . "name" "stream")) "true" }} deployment/stackstorm-stream{{- end }}{{- if eq (include "poundcakeStackstorm.stackstormServiceEnabled" (dict "root" . "name" "web")) "true" }} deployment/stackstorm-web{{- end }}"
+
+              wait_for_deployment() {
+                target="$1"
+                gate_log_wait_start "stackstorm-edge-${target#deployment/}" "deployment availability ${target}"
+                if kubectl -n "${NS}" wait --for=condition=Available "${target}" --timeout="${WAIT_TIMEOUT}"; then
+                  gate_log_wait_ready "stackstorm-edge-${target#deployment/}"
+                else
+                  gate_log_wait_tick "stackstorm-edge-${target#deployment/}" "deployment availability ${target}"
+                  return 1
+                fi
+              }
+
+              if [ "${PARALLEL_ENABLED}" = "true" ]; then
+                pids=""
+                status=0
+                for target in ${deployments}; do
+                  wait_for_deployment "${target}" &
+                  pids="${pids} $!"
+                done
+
+                for pid in ${pids}; do
+                  if ! wait "${pid}"; then
+                    status=1
+                    if [ "${FAIL_FAST}" = "true" ]; then
+                      exit 1
+                    fi
+                  fi
+                done
+                [ "${status}" -eq 0 ] || exit 1
+              else
+                for target in ${deployments}; do
+                  wait_for_deployment "${target}"
+                done
+              fi
+              kubectl -n "${NS}" patch secret stackstorm-startup-markers --type merge \
+                -p '{"stringData":{"stackstorm_edge_ready":"true"}}'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stackstorm-bootstrap
+  labels:
+    app.kubernetes.io/component: stackstorm-bootstrap
+    {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "60"
+    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: stackstorm-bootstrap
+        {{- include "poundcakeStackstorm.logLabelsForComponent" (dict "component" "stackstorm-bootstrap") | nindent 8 }}
+        {{- include "poundcakeStackstorm.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- include "poundcakeStackstorm.podPlacement" . | nindent 6 }}
+      serviceAccountName: poundcake-stackstorm-startup
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-edge
+          image: {{ .Values.images.busybox }}
+          securityContext:
+            {{- toYaml .Values.utilitySecurityContext | nindent 12 }}
+          command:
+            - sh
+            - -ec
+            - |
+              {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
+              gate_wait_for_true_file "/app/config/stackstorm_edge_ready" "wait-stage6-edge" "marker stackstorm_edge_ready"
+          volumeMounts:
+            - name: app-config
+              mountPath: /app/config
+        - name: automated-setup
+          image: {{ .Values.stackstormImage.repository }}:{{ .Values.stackstormImage.tag }}
+          imagePullPolicy: {{ .Values.stackstormImage.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.stackstormImage.securityContext | nindent 12 }}
+          envFrom:
+            - secretRef:
+                name: stackstorm-secrets
+          env:
+            - name: APP_CONFIG_DIR
+              value: /work
+            - name: ST2_API_URL
+              value: {{ include "poundcakeStackstorm.stackstormApiUrl" . | quote }}
+            - name: ST2_AUTH_URL
+              value: {{ include "poundcakeStackstorm.stackstormAuthUrl" . | quote }}
+            - name: ST2_CLIENT_AUTO_AUTH
+              value: "true"
+            - name: ST2_STREAM_URL
+              value: {{ include "poundcakeStackstorm.stackstormStreamUrl" . | quote }}
+          command:
+            - /bin/bash
+            - /st2-entrypoint.sh
+          args:
+            - /bin/bash
+            - -ec
+            - |
+              mkdir -p /work
+              if [ -s /app/config/st2_api_key ]; then
+                cp /app/config/st2_api_key /work/st2_api_key
+              fi
+              /bin/bash /automated-setup.sh
+          volumeMounts:
+            - name: stackstorm-config
+              mountPath: /etc/st2/st2.conf.template
+              subPath: st2.conf.template
+            - name: scripts
+              mountPath: /st2-entrypoint.sh
+              subPath: st2-entrypoint.sh
+            - name: scripts
+              mountPath: /automated-setup.sh
+              subPath: automated-setup.sh
+            - name: scripts
+              mountPath: /install-third-party-packs.sh
+              subPath: install-third-party-packs.sh
+            - name: packs
+              mountPath: /opt/stackstorm/packs/poundcake
+            - name: app-config
+              mountPath: /app/config
+            - name: generated-config
+              mountPath: /work
+      containers:
+        - name: publish-api-key
+          image: {{ .Values.images.kubectl }}
+          securityContext:
+            {{- toYaml .Values.utilitySecurityContext | nindent 12 }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              NS="{{ .Release.Namespace }}"
+              if [ ! -s /work/st2_api_key ]; then
+                echo "Generated StackStorm API key is missing."
+                exit 1
+              fi
+              key="$(cat /work/st2_api_key)"
+              kubectl -n "${NS}" patch secret stackstorm-apikeys --type merge \
+                -p "{\"stringData\":{\"st2_api_key\":\"${key}\"}}"
+              kubectl -n "${NS}" patch secret stackstorm-startup-markers --type merge \
+                -p '{"stringData":{"stackstorm_bootstrap_ready":"true"}}'
+          volumeMounts:
+            - name: generated-config
+              mountPath: /work
+      volumes:
+        - name: stackstorm-config
+          configMap:
+            name: stackstorm-config
+        - name: scripts
+          configMap:
+            name: stackstorm-scripts
+            defaultMode: 0755
+        - name: packs
+          configMap:
+            name: stackstorm-poundcake-pack
+            items:
+              - key: pack.yaml
+                path: pack.yaml
+              - key: host_down_remediation.yaml
+                path: actions/host_down_remediation.yaml
+              - key: host_down_remediation_workflow.yaml
+                path: actions/workflows/host_down_remediation.yaml
+        - name: app-config
+          projected:
+            sources:
+              - secret:
+                  name: stackstorm-startup-markers
+                  optional: true
+              - secret:
+                  name: stackstorm-apikeys
+                  optional: true
+        - name: generated-config
+          emptyDir: {}
+{{- end }}

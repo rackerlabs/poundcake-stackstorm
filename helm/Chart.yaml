@@ -1,0 +1,29 @@
+# ____                        _  ____      _
+# |  _ \ ___  _   _ _ __   __| |/ ___|__ _| | _____
+# | |_) / _ \| | | | '_ \ / _` | |   / _` | |/ / _ \
+# |  __/ (_) | |_| | | | | (_| | |__| (_| |   <  __/
+# |_|   \___/ \__,_|_| |_|\__,_|\____\__,_|_|\_\___|
+#
+apiVersion: v2
+name: poundcake-stackstorm
+description: StackStorm runtime and PoundCake-owned StackStorm content for PoundCake
+type: application
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the chart's dependencies.
+version: 1.0.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application.
+appVersion: "1.0.0"
+
+maintainers:
+  - name: Jake Briggs
+keywords:
+  - alertmanager
+  - stackstorm
+  - auto-remediation
+  - prometheus
+  - automation
+home: https://github.com/rackerlabs/poundcake-stackstorm-stackstorm
+sources:
+  - https://github.com/rackerlabs/poundcake-stackstorm

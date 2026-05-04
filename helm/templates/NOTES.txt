@@ -1,0 +1,20 @@
+1. Build and push the PoundCake image, then set values:
+
+   helm upgrade --install {{ .Release.Name }} {{ .Chart.Name }} \
+     --set poundcakeImage.repository=<repo> \
+     --set poundcakeImage.tag=<tag>
+
+2. Access services inside the cluster:
+
+   - API:           {{ include "poundcakeStackstorm.apiServiceUrl" . }}
+{{- if .Values.stackstorm.enabled }}
+   - StackStorm API: {{ include "poundcakeStackstorm.stackstormApiUrl" . }}
+   - StackStorm Auth: {{ include "poundcakeStackstorm.stackstormAuthUrl" . }}
+{{- else if contains "stackstorm" (include "poundcakeStackstorm.enabledPlugins" .) }}
+   - StackStorm Plugin API: {{ include "poundcakeStackstorm.stackstormApiUrl" . }}
+   - StackStorm Plugin Auth: {{ include "poundcakeStackstorm.stackstormAuthUrl" . }}
+{{- end }}
+
+3. Bootstrap jobs to check:
+
+   kubectl get jobs -l app.kubernetes.io/instance={{ .Release.Name }}
