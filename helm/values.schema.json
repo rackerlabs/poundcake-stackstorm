@@ -919,7 +919,13 @@
           "properties": {
             "enabled": { "type": "boolean", "default": true },
             "deleteSuccessful": { "type": "boolean", "default": true },
-            "deleteFailed": { "type": "boolean", "default": false }
+            "deleteFailed": { "type": "boolean", "default": false },
+            "ttlSecondsAfterFinished": {
+              "type": "integer",
+              "default": 300,
+              "minimum": 0,
+              "description": "Seconds to retain completed startup gate Jobs before Kubernetes TTL cleanup"
+            }
           }
         }
       }

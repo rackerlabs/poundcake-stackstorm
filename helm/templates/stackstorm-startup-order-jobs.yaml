@@ -6,12 +6,9 @@ metadata:
   labels:
     app.kubernetes.io/component: stackstorm-mongodb-user-sync
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "10"
-    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: {{ .Values.startupHooks.cleanup.ttlSecondsAfterFinished }}
   template:
     metadata:
       labels:
@@ -117,12 +114,9 @@ metadata:
   labels:
     app.kubernetes.io/component: stackstorm-infra-ready
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "20"
-    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: {{ .Values.startupHooks.cleanup.ttlSecondsAfterFinished }}
   template:
     metadata:
       labels:
@@ -195,12 +189,9 @@ metadata:
   labels:
     app.kubernetes.io/component: stackstorm-controlplane-ready
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "30"
-    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: {{ .Values.startupHooks.cleanup.ttlSecondsAfterFinished }}
   template:
     metadata:
       labels:
@@ -275,12 +266,9 @@ metadata:
   labels:
     app.kubernetes.io/component: stackstorm-workers-ready
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "40"
-    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: {{ .Values.startupHooks.cleanup.ttlSecondsAfterFinished }}
   template:
     metadata:
       labels:
@@ -355,12 +343,9 @@ metadata:
   labels:
     app.kubernetes.io/component: stackstorm-edge-ready
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "50"
-    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: {{ .Values.startupHooks.cleanup.ttlSecondsAfterFinished }}
   template:
     metadata:
       labels:
@@ -435,12 +420,9 @@ metadata:
   labels:
     app.kubernetes.io/component: stackstorm-bootstrap
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "60"
-    "helm.sh/hook-delete-policy": {{ include "poundcakeStackstorm.startupHookDeletePolicy" . | quote }}
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: {{ .Values.startupHooks.cleanup.ttlSecondsAfterFinished }}
   template:
     metadata:
       labels:
@@ -457,18 +439,21 @@ spec:
       restartPolicy: OnFailure
       initContainers:
         - name: wait-edge
-          image: {{ .Values.images.busybox }}
+          image: {{ .Values.images.kubectl }}
           securityContext:
             {{- toYaml .Values.utilitySecurityContext | nindent 12 }}
           command:
-            - sh
+            - /bin/sh
             - -ec
             - |
+              NS="{{ .Release.Namespace }}"
               {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
-              gate_wait_for_true_file "/app/config/stackstorm_edge_ready" "wait-stage6-edge" "marker stackstorm_edge_ready"
-          volumeMounts:
-            - name: app-config
-              mountPath: /app/config
+              gate_log_wait_start "wait-stage6-edge" "secret stackstorm-startup-markers/stackstorm_edge_ready"
+              until [ "$(kubectl -n "${NS}" get secret stackstorm-startup-markers -o jsonpath='{.data.stackstorm_edge_ready}' 2>/dev/null)" = "dHJ1ZQ==" ]; do
+                gate_log_wait_tick "wait-stage6-edge" "secret stackstorm-startup-markers/stackstorm_edge_ready"
+                sleep 2
+              done
+              gate_log_wait_ready "wait-stage6-edge"
         - name: automated-setup
           image: {{ .Values.stackstormImage.repository }}:{{ .Values.stackstormImage.tag }}
           imagePullPolicy: {{ .Values.stackstormImage.pullPolicy }}

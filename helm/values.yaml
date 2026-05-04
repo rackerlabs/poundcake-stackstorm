@@ -1029,6 +1029,7 @@ startupHooks:
     enabled: true
     deleteSuccessful: true
     deleteFailed: false
+    ttlSecondsAfterFinished: 300
 
 # Pod disruption budget settings
 pdb:

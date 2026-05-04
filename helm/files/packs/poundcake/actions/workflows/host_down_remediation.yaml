@@ -13,7 +13,7 @@ tasks:
     next:
       - when: <% succeeded() %>
         publish:
-          status: accepted
+          - status: accepted
 
 output:
   - status: <% ctx().status %>

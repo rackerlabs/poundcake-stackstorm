@@ -1,0 +1,86 @@
+# Local kind defaults for the PoundCake StackStorm chart.
+#
+# This keeps the full StackStorm control plane enabled, trims storage/resource
+# requests for a laptop cluster, and leaves optional third-party pack bootstrap
+# disabled by default.
+
+persistence:
+  mongo:
+    size: 2Gi
+  rabbitmq:
+    size: 1Gi
+  redis:
+    size: 1Gi
+  stackstormSharedStorage:
+    enabled: false
+
+mongodb:
+  persistence:
+    size: 2Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+
+rabbitmq:
+  persistence:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+
+redis:
+  persistence:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+stackstorm:
+  enabled: true
+  bootstrap:
+    packs:
+      kubernetes:
+        enabled: false
+      openstack:
+        enabled: false
+
+stackstormServices:
+  stream:
+    enabled: true
+  web:
+    enabled: true
+  client:
+    enabled: true
+
+services:
+  stackstormApi:
+    type: ClusterIP
+  stackstormAuth:
+    type: ClusterIP
+  stackstormStream:
+    type: ClusterIP
+  stackstormWeb:
+    type: ClusterIP
+
+serviceMonitor:
+  enabled: false
+
+pdb:
+  enabled: false
+
+startupHooks:
+  cleanup:
+    deleteSuccessful: false
+    deleteFailed: false
