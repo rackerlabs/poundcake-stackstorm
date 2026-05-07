@@ -43,8 +43,14 @@ data:
     version: 0.1.0
     author: Rackspace
     email: noreply@rackspace.com
-  host_down_remediation.yaml: |
-{{ .Files.Get "files/packs/poundcake/actions/host_down_remediation.yaml" | indent 4 }}
-  host_down_remediation_workflow.yaml: |
-{{ .Files.Get "files/packs/poundcake/actions/workflows/host_down_remediation.yaml" | indent 4 }}
+  poundcake_profiles.json: |
+{{ .Files.Get "files/packs/poundcake/poundcake_profiles.json" | indent 4 }}
+{{- range $path, $_ := .Files.Glob "files/packs/poundcake/actions/*.yaml" }}
+  {{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
+{{- range $path, $_ := .Files.Glob "files/packs/poundcake/actions/workflows/*.yaml" }}
+  {{ printf "%s_workflow.yaml" (trimSuffix ".yaml" (base $path)) }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
 {{- end }}

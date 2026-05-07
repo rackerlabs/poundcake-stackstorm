@@ -1,0 +1,56 @@
+version: 1.0
+
+description: Gather bounded HTTP evidence for a blackbox service-down alert.
+
+input:
+  - alert_name
+  - alert_group_name
+  - severity
+  - instance
+  - labels
+  - annotations: {}
+  - order_id
+  - req_id
+  - method: HEAD
+  - timeout: 15
+  - evidence: {}
+
+tasks:
+  probe_endpoint:
+    action: core.http
+    input:
+      url: <% ctx().instance %>
+      method: <% ctx().method %>
+      timeout: <% ctx().timeout %>
+    next:
+      - when: <% succeeded() %>
+        publish:
+          - status: succeeded
+          - mutated: false
+          - stage: evidence
+          - message: "Collected blackbox endpoint probe evidence."
+          - remediation_evidence:
+              inherited: <% ctx().evidence %>
+              probe:
+                target: <% ctx().instance %>
+                method: <% ctx().method %>
+                result: <% result() %>
+      - when: <% failed() %>
+        publish:
+          - status: succeeded
+          - mutated: false
+          - stage: evidence
+          - message: "Collected failed blackbox endpoint probe evidence."
+          - remediation_evidence:
+              inherited: <% ctx().evidence %>
+              probe:
+                target: <% ctx().instance %>
+                method: <% ctx().method %>
+                error: <% result() %>
+
+output:
+  - status: <% ctx().status %>
+  - mutated: <% ctx().mutated %>
+  - stage: <% ctx().stage %>
+  - message: <% ctx().message %>
+  - evidence: <% ctx().remediation_evidence %>

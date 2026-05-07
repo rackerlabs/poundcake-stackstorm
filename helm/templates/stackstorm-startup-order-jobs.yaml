@@ -546,10 +546,16 @@ spec:
             items:
               - key: pack.yaml
                 path: pack.yaml
-              - key: host_down_remediation.yaml
-                path: actions/host_down_remediation.yaml
-              - key: host_down_remediation_workflow.yaml
-                path: actions/workflows/host_down_remediation.yaml
+              - key: poundcake_profiles.json
+                path: poundcake_profiles.json
+{{- range $path, $_ := .Files.Glob "files/packs/poundcake/actions/*.yaml" }}
+              - key: {{ base $path }}
+                path: actions/{{ base $path }}
+{{- end }}
+{{- range $path, $_ := .Files.Glob "files/packs/poundcake/actions/workflows/*.yaml" }}
+              - key: {{ printf "%s_workflow.yaml" (trimSuffix ".yaml" (base $path)) }}
+                path: actions/workflows/{{ base $path }}
+{{- end }}
         - name: app-config
           projected:
             sources:

@@ -1,11 +1,13 @@
 version: 1.0
 
-description: Placeholder host-down remediation workflow invoked by PoundCake.
+description: Cancel-safe host-down remediation workflow invoked by PoundCake.
 
 input:
   - host
   - alert_group_name
   - order_id
+  - req_id
+  - evidence: {}
 
 tasks:
   acknowledge:
@@ -13,7 +15,15 @@ tasks:
     next:
       - when: <% succeeded() %>
         publish:
-          - status: accepted
+          - status: succeeded
+          - mutated: false
+          - stage: verified
+          - message: "No safe automatic StackStorm mutation is configured for host_down_remediation; evidence captured for operator review."
+          - remediation_evidence: <% ctx().evidence %>
 
 output:
   - status: <% ctx().status %>
+  - mutated: <% ctx().mutated %>
+  - stage: <% ctx().stage %>
+  - message: <% ctx().message %>
+  - evidence: <% ctx().remediation_evidence %>

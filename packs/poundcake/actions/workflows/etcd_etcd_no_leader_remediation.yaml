@@ -1,0 +1,46 @@
+version: 1.0
+
+description: Record conservative etcd operator-review remediation guidance for etcd-no-leader.
+
+input:
+  - alert_name
+  - alert_group_name
+  - severity
+  - labels
+  - annotations: {}
+  - instance
+  - job
+  - cluster
+  - order_id
+  - req_id
+  - evidence: {}
+
+tasks:
+  publish_context:
+    action: core.noop
+    next:
+      - when: <% succeeded() %>
+        publish:
+          - status: succeeded
+          - mutated: false
+          - stage: operator_review
+          - message: "No safe automatic mutation is configured for etcd-no-leader; evidence captured for operator review."
+          - remediation_evidence:
+              inherited: <% ctx().evidence %>
+              alert_name: <% ctx().alert_name %>
+              alert_group_name: <% ctx().alert_group_name %>
+              severity: <% ctx().severity %>
+              instance: <% ctx().instance %>
+              job: <% ctx().job %>
+              cluster: <% ctx().cluster %>
+              labels: <% ctx().labels %>
+              annotations: <% ctx().annotations %>
+              operator_review_required: true
+              automation_mutation_enabled: false
+
+output:
+  - status: <% ctx().status %>
+  - mutated: <% ctx().mutated %>
+  - stage: <% ctx().stage %>
+  - message: <% ctx().message %>
+  - evidence: <% ctx().remediation_evidence %>

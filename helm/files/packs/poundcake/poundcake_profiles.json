@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "description": "PoundCake StackStorm alert-to-workflow profiles. Catalog sync materializes actionable severities and treats noop severities as no-op alerts.",
+  "profiles": [
+    {
+      "domain": "kubernetes",
+      "actionable_severities": ["critical"],
+      "noop_severities": ["warning"],
+      "workflow_prefix": "poundcake.kubernetes_",
+      "workflow_suffix": "_remediation",
+      "alert_groups": [
+        "cpu-throttling-high",
+        "kube-aggregated-api-down",
+        "kube-aggregated-api-errors",
+        "kube-api-down",
+        "kube-api-error-budget-burn",
+        "kube-api-terminated-requests",
+        "kube-client-certificate-expiration",
+        "kube-client-errors",
+        "kube-controller-manager-down",
+        "kube-cpu-overcommit",
+        "kube-cpu-quota-overcommit",
+        "kube-daemonset-misscheduled",
+        "kube-daemonset-not-scheduled",
+        "kube-daemonset-rollout-stuck",
+        "kube-hpa-maxed-out",
+        "kube-hpa-replicas-mismatch",
+        "kube-job-failed",
+        "kube-job-not-completed",
+        "kube-memory-overcommit",
+        "kube-node-eviction",
+        "kube-node-not-ready",
+        "kube-node-pressure",
+        "kube-node-readiness-flapping",
+        "kube-node-unreachable",
+        "kube-pdb-not-enough-healthy-pods",
+        "kube-persistent-volume-errors",
+        "kube-persistent-volume-filling-up",
+        "kube-persistent-volume-inodes-filling-up",
+        "kube-proxy-down",
+        "kube-scheduler-down",
+        "kube-statefulset-generation-mismatch",
+        "kube-statefulset-replicas-mismatch",
+        "kube-statefulset-update-not-rolled-out",
+        "kube-version-mismatch",
+        "kubelet-client-certificate-expiration",
+        "kubelet-client-certificate-renewal-errors",
+        "kubelet-down",
+        "kubelet-pod-startup-latency-high",
+        "kubelet-server-certificate-expiration",
+        "kubelet-server-certificate-renewal-errors",
+        "kubelet-too-many-pods"
+      ]
+    },
+    {
+      "domain": "blackbox",
+      "actionable_severities": ["critical"],
+      "noop_severities": ["warning"],
+      "workflow_refs": [
+        "poundcake.blackbox_service_down_evidence",
+        "poundcake.blackbox_service_down_remediation",
+        "poundcake.blackbox_service_down_verify_recovery"
+      ],
+      "alert_groups": ["blackbox-service-down"]
+    },
+    {
+      "domain": "etcd",
+      "actionable_severities": ["critical"],
+      "noop_severities": ["warning"],
+      "workflow_prefix": "poundcake.etcd_",
+      "workflow_phases": ["evidence", "remediation", "verify_recovery"],
+      "alert_groups": [
+        "etcd-database-high-fragmentation-ratio",
+        "etcd-database-quota-low-space",
+        "etcd-excessive-database-growth",
+        "etcd-grpc-requests-slow",
+        "etcd-high-commit-durations",
+        "etcd-high-fsync-durations",
+        "etcd-high-number-of-failed-grpc-requests",
+        "etcd-high-number-of-failed-proposals",
+        "etcd-high-number-of-leader-changes",
+        "etcd-insufficient-members",
+        "etcd-member-communication-slow",
+        "etcd-members-down",
+        "etcd-no-leader"
+      ]
+    }
+  ]
+}

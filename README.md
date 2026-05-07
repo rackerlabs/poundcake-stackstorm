@@ -8,6 +8,7 @@ This repo owns:
 - StackStorm startup/bootstrap jobs
 - generated ST2 API key secret export
 - PoundCake-owned StackStorm actions and workflows under `packs/poundcake`
+- tested alert-to-workflow profile metadata in `packs/poundcake/poundcake_profiles.json`
 
 Install locally:
 
