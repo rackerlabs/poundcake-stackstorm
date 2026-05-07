@@ -8,9 +8,9 @@
 # Default values for PoundCake
 #
 # Namespace behavior:
-# - direct Helm installs use the namespace you pass with `--namespace`
-# - the bundled installer defaults `POUNDCAKE_NAMESPACE` to `poundcake`
-# - each release renders into a single namespace; split installs use separate releases
+# - StackStorm resources render into stackstorm.namespace, which defaults to `stackstorm`
+# - the bundled installer defaults `POUNDCAKE_STACKSTORM_NAMESPACE` to `stackstorm`
+# - when stackstorm.namespace differs from the Helm release namespace, the chart creates it
 #
 # High-level chart shape:
 # - PoundCake API + UI + workers
@@ -225,6 +225,11 @@ stackstorm:
   # PoundCake-only chart verification where the stackstorm plugin may still be
   # registered against an external or intentionally absent ST2 endpoint.
   enabled: true
+
+  # Namespace for StackStorm runtime services managed by this chart. This keeps
+  # StackStorm out of the PoundCake release namespace.
+  namespace: "stackstorm"
+  createNamespace: true
 
   # External StackStorm release name used for service/secret defaults.
   # Example: "stackstorm" -> stackstorm-st2api, stackstorm-st2auth, stackstorm-st2-apikeys.

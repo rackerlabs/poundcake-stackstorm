@@ -3,6 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: stackstorm-mongodb-user-sync
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-mongodb-user-sync
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -103,7 +104,7 @@ spec:
             - /bin/sh
             - -ec
             - |
-              NS="{{ .Release.Namespace }}"
+              NS="{{ include "poundcakeStackstorm.stackstormNamespace" . }}"
               kubectl -n "${NS}" patch secret stackstorm-startup-markers --type merge \
                 -p '{"stringData":{"stackstorm_mongodb_user_ready":"true"}}'
 ---
@@ -111,6 +112,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: stackstorm-infra-ready
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-infra-ready
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -141,7 +143,7 @@ spec:
             - /bin/sh
             - -ec
             - |
-              NS="{{ .Release.Namespace }}"
+              NS="{{ include "poundcakeStackstorm.stackstormNamespace" . }}"
               {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
               PARALLEL_ENABLED="{{ ternary "true" "false" .Values.startupHooks.parallelWait.enabled }}"
               FAIL_FAST="{{ ternary "true" "false" .Values.startupHooks.parallelWait.failFast }}"
@@ -186,6 +188,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: stackstorm-controlplane-ready
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-controlplane-ready
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -216,7 +219,7 @@ spec:
             - /bin/sh
             - -ec
             - |
-              NS="{{ .Release.Namespace }}"
+              NS="{{ include "poundcakeStackstorm.stackstormNamespace" . }}"
               {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
               PARALLEL_ENABLED="{{ ternary "true" "false" .Values.startupHooks.parallelWait.enabled }}"
               FAIL_FAST="{{ ternary "true" "false" .Values.startupHooks.parallelWait.failFast }}"
@@ -263,6 +266,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: stackstorm-workers-ready
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-workers-ready
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -293,7 +297,7 @@ spec:
             - /bin/sh
             - -ec
             - |
-              NS="{{ .Release.Namespace }}"
+              NS="{{ include "poundcakeStackstorm.stackstormNamespace" . }}"
               {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
               PARALLEL_ENABLED="{{ ternary "true" "false" .Values.startupHooks.parallelWait.enabled }}"
               FAIL_FAST="{{ ternary "true" "false" .Values.startupHooks.parallelWait.failFast }}"
@@ -340,6 +344,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: stackstorm-edge-ready
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-edge-ready
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -370,7 +375,7 @@ spec:
             - /bin/sh
             - -ec
             - |
-              NS="{{ .Release.Namespace }}"
+              NS="{{ include "poundcakeStackstorm.stackstormNamespace" . }}"
               {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
               PARALLEL_ENABLED="{{ ternary "true" "false" .Values.startupHooks.parallelWait.enabled }}"
               FAIL_FAST="{{ ternary "true" "false" .Values.startupHooks.parallelWait.failFast }}"
@@ -417,6 +422,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: stackstorm-bootstrap
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-bootstrap
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -446,7 +452,7 @@ spec:
             - /bin/sh
             - -ec
             - |
-              NS="{{ .Release.Namespace }}"
+              NS="{{ include "poundcakeStackstorm.stackstormNamespace" . }}"
               {{- include "poundcakeStackstorm.gateLogHelpers" . | nindent 14 }}
               gate_log_wait_start "wait-stage6-edge" "secret stackstorm-startup-markers/stackstorm_edge_ready"
               until [ "$(kubectl -n "${NS}" get secret stackstorm-startup-markers -o jsonpath='{.data.stackstorm_edge_ready}' 2>/dev/null)" = "dHJ1ZQ==" ]; do
@@ -513,7 +519,7 @@ spec:
             - /bin/sh
             - -ec
             - |
-              NS="{{ .Release.Namespace }}"
+              NS="{{ include "poundcakeStackstorm.stackstormNamespace" . }}"
               if [ ! -s /work/st2_api_key ]; then
                 echo "Generated StackStorm API key is missing."
                 exit 1

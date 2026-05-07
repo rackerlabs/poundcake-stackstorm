@@ -1,0 +1,8 @@
+{{- if and .Values.stackstorm.enabled (.Values.stackstorm.createNamespace | default true) (ne (include "poundcakeStackstorm.stackstormNamespace" .) .Release.Namespace) }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
+  labels:
+    {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
+{{- end }}

@@ -8,7 +8,7 @@ This repository owns the StackStorm runtime used by PoundCake and the PoundCake-
 
 Defaults:
 
-- namespace: `poundcake`
+- namespace: `stackstorm`
 - release: `poundcake-stackstorm`
 - chart: local `./helm`
 - override directory: `/etc/genestack/helm-configs/poundcake-stackstorm`
@@ -18,8 +18,8 @@ After this chart is installed, install PoundCake with its StackStorm adapter poi
 ```yaml
 stackstorm:
   enabled: false
-  url: http://stackstorm-api.poundcake.svc.cluster.local:9101
-  authUrl: http://stackstorm-auth.poundcake.svc.cluster.local:9100
+  url: http://stackstorm-api.stackstorm.svc.cluster.local:9101
+  authUrl: http://stackstorm-auth.stackstorm.svc.cluster.local:9100
   apiKeySecretName: stackstorm-apikeys
   apiKeySecretKey: st2_api_key
 ```

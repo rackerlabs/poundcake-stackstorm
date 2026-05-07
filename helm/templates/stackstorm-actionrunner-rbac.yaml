@@ -22,6 +22,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ include "poundcakeStackstorm.stackstormActionrunnerServiceAccountName" . }}
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
   {{- with $serviceAccount.annotations }}
@@ -67,7 +68,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: {{ include "poundcakeStackstorm.stackstormActionrunnerServiceAccountName" . }}
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

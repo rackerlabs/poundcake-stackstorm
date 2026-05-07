@@ -5,6 +5,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-register
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-register
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -143,6 +144,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-auth
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-auth
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -236,6 +238,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-api
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-api
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -374,6 +377,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-actionrunner
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-actionrunner
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -504,6 +508,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-rulesengine
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-rulesengine
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -593,6 +598,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-workflowengine
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-workflowengine
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -722,6 +728,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-scheduler
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-scheduler
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -812,6 +819,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-notifier
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-notifier
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -893,6 +901,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-garbagecollector
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-garbagecollector
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -974,6 +983,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-timersengine
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-timersengine
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -1056,6 +1066,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-sensorcontainer
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-sensorcontainer
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -1147,6 +1158,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-stream
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-stream
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -1232,6 +1244,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-web
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-web
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -1317,6 +1330,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-client
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-client
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}

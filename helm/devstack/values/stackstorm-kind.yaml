@@ -60,7 +60,7 @@ stackstormServices:
   stream:
     enabled: true
   web:
-    enabled: true
+    enabled: false
   client:
     enabled: true
 
