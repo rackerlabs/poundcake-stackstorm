@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-mongodb
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-mongodb
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -98,6 +99,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-rabbitmq
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-rabbitmq
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}
@@ -210,6 +212,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: stackstorm-redis
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" . }}
   labels:
     app.kubernetes.io/component: stackstorm-redis
     {{- include "poundcakeStackstorm.labels" . | nindent 4 }}

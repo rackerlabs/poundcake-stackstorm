@@ -4,7 +4,7 @@
 set -euo pipefail
 
 KIND_CLUSTER_NAME="${KIND_CLUSTER_NAME:-poundcake-stackstorm}"
-NAMESPACE="${NAMESPACE:-poundcake-stackstorm}"
+NAMESPACE="${NAMESPACE:-stackstorm}"
 RELEASE_NAME="${RELEASE_NAME:-poundcake-stackstorm}"
 UNINSTALL_RELEASE="${UNINSTALL_RELEASE:-true}"
 DELETE_NAMESPACE="${DELETE_NAMESPACE:-true}"

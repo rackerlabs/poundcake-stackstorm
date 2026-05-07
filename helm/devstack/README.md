@@ -13,7 +13,7 @@ Defaults:
 
 - kind cluster: `poundcake-stackstorm`
 - Kubernetes context: `kind-poundcake-stackstorm`
-- namespace: `poundcake-stackstorm`
+- namespace: `stackstorm`
 - Helm release: `poundcake-stackstorm`
 - chart: `helm`
 - values: `helm/devstack/values/stackstorm-kind.yaml`

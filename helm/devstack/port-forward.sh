@@ -4,7 +4,7 @@
 set -euo pipefail
 
 ACTION="${1:-start}"
-NAMESPACE="${NAMESPACE:-poundcake-stackstorm}"
+NAMESPACE="${NAMESPACE:-stackstorm}"
 TMP_DIR="${TMP_DIR:-/tmp/poundcake-stackstorm-helm-devstack}"
 KUBECTL_BIN="${KUBECTL_BIN:-kubectl}"
 

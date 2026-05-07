@@ -6,6 +6,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: stackstorm-{{ $item }}
+  namespace: {{ include "poundcakeStackstorm.stackstormNamespace" $ }}
   labels:
     {{- include "poundcakeStackstorm.labels" $ | nindent 4 }}
 spec:

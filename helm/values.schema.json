@@ -447,6 +447,8 @@
     "stackstorm": {
       "type": "object",
       "properties": {
+        "namespace": { "type": "string", "default": "stackstorm" },
+        "createNamespace": { "type": "boolean", "default": true },
         "releaseName": { "type": "string", "default": "" },
         "url": { "type": "string", "default": "" },
         "authUrl": { "type": "string", "default": "" },

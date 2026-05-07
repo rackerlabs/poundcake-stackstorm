@@ -52,13 +52,17 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- default "stackstorm" .Values.stackstorm.releaseName -}}
 {{- end -}}
 
+{{- define "poundcakeStackstorm.stackstormNamespace" -}}
+{{- default "stackstorm" .Values.stackstorm.namespace -}}
+{{- end -}}
+
 {{- define "poundcakeStackstorm.stackstormApiUrl" -}}
 {{- if .Values.stackstorm.url -}}
 {{- .Values.stackstorm.url -}}
 {{- else if .Values.stackstorm.releaseName -}}
-{{- printf "http://%s-st2api:9101" (include "poundcakeStackstorm.stackstormSubchartPrefix" .) -}}
+{{- printf "http://%s-st2api.%s.svc.cluster.local:9101" (include "poundcakeStackstorm.stackstormSubchartPrefix" .) (include "poundcakeStackstorm.stackstormNamespace" .) -}}
 {{- else -}}
-{{- printf "http://stackstorm-api:%v" .Values.services.stackstormApi.port -}}
+{{- printf "http://stackstorm-api.%s.svc.cluster.local:%v" (include "poundcakeStackstorm.stackstormNamespace" .) .Values.services.stackstormApi.port -}}
 {{- end -}}
 {{- end -}}
 
@@ -66,9 +70,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if .Values.stackstorm.authUrl -}}
 {{- .Values.stackstorm.authUrl -}}
 {{- else if .Values.stackstorm.releaseName -}}
-{{- printf "http://%s-st2auth:9100" (include "poundcakeStackstorm.stackstormSubchartPrefix" .) -}}
+{{- printf "http://%s-st2auth.%s.svc.cluster.local:9100" (include "poundcakeStackstorm.stackstormSubchartPrefix" .) (include "poundcakeStackstorm.stackstormNamespace" .) -}}
 {{- else -}}
-{{- printf "http://stackstorm-auth:%v" .Values.services.stackstormAuth.port -}}
+{{- printf "http://stackstorm-auth.%s.svc.cluster.local:%v" (include "poundcakeStackstorm.stackstormNamespace" .) .Values.services.stackstormAuth.port -}}
 {{- end -}}
 {{- end -}}
 
@@ -76,9 +80,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if .Values.stackstorm.streamUrl -}}
 {{- .Values.stackstorm.streamUrl -}}
 {{- else if .Values.stackstorm.releaseName -}}
-{{- printf "http://%s-st2stream:9102" (include "poundcakeStackstorm.stackstormSubchartPrefix" .) -}}
+{{- printf "http://%s-st2stream.%s.svc.cluster.local:9102" (include "poundcakeStackstorm.stackstormSubchartPrefix" .) (include "poundcakeStackstorm.stackstormNamespace" .) -}}
 {{- else -}}
-{{- printf "http://stackstorm-stream:%v" .Values.services.stackstormStream.port -}}
+{{- printf "http://stackstorm-stream.%s.svc.cluster.local:%v" (include "poundcakeStackstorm.stackstormNamespace" .) .Values.services.stackstormStream.port -}}
 {{- end -}}
 {{- end -}}
 
