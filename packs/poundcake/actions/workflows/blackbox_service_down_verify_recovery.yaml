@@ -1,0 +1,56 @@
+version: 1.0
+
+description: Verify endpoint recovery after blackbox service-down remediation.
+
+input:
+  - alert_name
+  - alert_group_name
+  - severity
+  - instance
+  - labels
+  - annotations: {}
+  - order_id
+  - req_id
+  - method: GET
+  - timeout: 15
+  - evidence: {}
+
+tasks:
+  probe_endpoint:
+    action: core.http
+    input:
+      url: <% ctx().instance %>
+      method: <% ctx().method %>
+      timeout: <% ctx().timeout %>
+    next:
+      - when: <% succeeded() %>
+        publish:
+          - status: succeeded
+          - mutated: false
+          - stage: recovery_verified
+          - message: "Collected blackbox endpoint recovery probe evidence."
+          - remediation_evidence:
+              inherited: <% ctx().evidence %>
+              recovery_probe:
+                target: <% ctx().instance %>
+                method: <% ctx().method %>
+                result: <% result() %>
+      - when: <% failed() %>
+        publish:
+          - status: succeeded
+          - mutated: false
+          - stage: recovery_not_verified
+          - message: "Endpoint recovery was not verified by the follow-up probe."
+          - remediation_evidence:
+              inherited: <% ctx().evidence %>
+              recovery_probe:
+                target: <% ctx().instance %>
+                method: <% ctx().method %>
+                error: <% result() %>
+
+output:
+  - status: <% ctx().status %>
+  - mutated: <% ctx().mutated %>
+  - stage: <% ctx().stage %>
+  - message: <% ctx().message %>
+  - evidence: <% ctx().remediation_evidence %>

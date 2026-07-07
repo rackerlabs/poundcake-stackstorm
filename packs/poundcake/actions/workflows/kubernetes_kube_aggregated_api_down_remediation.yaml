@@ -1,0 +1,45 @@
+version: 1.0
+
+description: Cancel-safe Kubernetes remediation workflow for kube-aggregated-api-down.
+
+input:
+  - alert_name
+  - alert_group_name
+  - severity
+  - labels
+  - annotations
+  - order_id
+  - req_id
+  - evidence: {}
+
+tasks:
+  verify_inputs:
+    action: core.noop
+    next:
+      - when: <% succeeded() and ctx().alert_name != null and ctx().labels != null %>
+        do: publish_verified_noop
+      - when: <% succeeded() and (ctx().alert_name = null or ctx().labels = null) %>
+        publish:
+          - status: failed
+          - mutated: false
+          - stage: verify_inputs
+          - message: "Missing required alert_name or labels input for kube-aggregated-api-down."
+          - remediation_evidence: <% ctx().evidence %>
+
+  publish_verified_noop:
+    action: core.noop
+    next:
+      - when: <% succeeded() %>
+        publish:
+          - status: succeeded
+          - mutated: false
+          - stage: verified
+          - message: "Verified required alert inputs for kube-aggregated-api-down; no safe automatic StackStorm mutation is configured, evidence captured for operator review."
+          - remediation_evidence: <% ctx().evidence %>
+
+output:
+  - status: <% ctx().status %>
+  - mutated: <% ctx().mutated %>
+  - stage: <% ctx().stage %>
+  - message: <% ctx().message %>
+  - evidence: <% ctx().remediation_evidence %>

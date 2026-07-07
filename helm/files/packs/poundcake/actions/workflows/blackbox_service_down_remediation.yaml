@@ -1,0 +1,40 @@
+version: 1.0
+
+description: Conservative remediation workflow for a blackbox service-down alert.
+
+input:
+  - alert_name
+  - alert_group_name
+  - severity
+  - instance
+  - labels
+  - annotations: {}
+  - order_id
+  - req_id
+  - method: HEAD
+  - timeout: 15
+  - evidence: {}
+
+tasks:
+  acknowledge_noop:
+    action: core.noop
+    next:
+      - when: <% succeeded() %>
+        publish:
+          - status: succeeded
+          - mutated: false
+          - stage: remediated
+          - message: "No safe automatic mutation is configured for blackbox-service-down; evidence captured for operator review."
+          - remediation_evidence:
+              inherited: <% ctx().evidence %>
+              target: <% ctx().instance %>
+              alert_name: <% ctx().alert_name %>
+              labels: <% ctx().labels %>
+              annotations: <% ctx().annotations %>
+
+output:
+  - status: <% ctx().status %>
+  - mutated: <% ctx().mutated %>
+  - stage: <% ctx().stage %>
+  - message: <% ctx().message %>
+  - evidence: <% ctx().remediation_evidence %>

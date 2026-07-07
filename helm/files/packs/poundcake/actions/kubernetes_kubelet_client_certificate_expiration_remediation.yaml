@@ -1,0 +1,40 @@
+name: kubernetes_kubelet_client_certificate_expiration_remediation
+runner_type: orquesta
+entry_point: workflows/kubernetes_kubelet_client_certificate_expiration_remediation.yaml
+enabled: true
+description: Cancel-safe Kubernetes remediation workflow for kubelet-client-certificate-expiration.
+parameters:
+  alert_name:
+    type: string
+    required: true
+    description: Alertmanager alert name.
+  alert_group_name:
+    type: string
+    required: true
+    description: PoundCake alert group name.
+  severity:
+    type: string
+    required: false
+    description: Alert severity label.
+  labels:
+    type: object
+    required: true
+    description: Alert labels from Alertmanager.
+  annotations:
+    type: object
+    required: false
+    default: {}
+    description: Alert annotations from Alertmanager.
+  order_id:
+    type: integer
+    required: false
+    description: PoundCake order id.
+  req_id:
+    type: string
+    required: false
+    description: PoundCake request id.
+  evidence:
+    type: object
+    required: false
+    default: {}
+    description: Evidence gathered by PoundCake before remediation.

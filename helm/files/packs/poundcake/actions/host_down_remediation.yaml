@@ -16,3 +16,12 @@ parameters:
     type: integer
     required: false
     description: PoundCake order id.
+  req_id:
+    type: string
+    required: false
+    description: PoundCake request id.
+  evidence:
+    type: object
+    required: false
+    default: {}
+    description: Evidence gathered before remediation.

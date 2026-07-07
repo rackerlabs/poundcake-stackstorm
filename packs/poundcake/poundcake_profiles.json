@@ -1,0 +1,2107 @@
+{
+  "version": 1,
+  "description": "PoundCake StackStorm alert-to-workflow profiles. Catalog sync materializes actionable severities and treats noop severities as no-op alerts.",
+  "profiles": [
+    {
+      "domain": "kubernetes",
+      "actionable_severities": [
+        "critical"
+      ],
+      "noop_severities": [
+        "warning"
+      ],
+      "workflow_prefix": "poundcake.kubernetes_",
+      "workflow_suffix": "_remediation",
+      "alert_groups": [
+        "cpu-throttling-high",
+        "kube-aggregated-api-down",
+        "kube-aggregated-api-errors",
+        "kube-api-down",
+        "kube-api-error-budget-burn",
+        "kube-api-terminated-requests",
+        "kube-client-certificate-expiration",
+        "kube-client-errors",
+        "kube-controller-manager-down",
+        "kube-cpu-overcommit",
+        "kube-cpu-quota-overcommit",
+        "kube-daemonset-misscheduled",
+        "kube-daemonset-not-scheduled",
+        "kube-daemonset-rollout-stuck",
+        "kube-hpa-maxed-out",
+        "kube-hpa-replicas-mismatch",
+        "kube-job-failed",
+        "kube-job-not-completed",
+        "kube-memory-overcommit",
+        "kube-node-eviction",
+        "kube-node-not-ready",
+        "kube-node-pressure",
+        "kube-node-readiness-flapping",
+        "kube-node-unreachable",
+        "kube-pdb-not-enough-healthy-pods",
+        "kube-persistent-volume-errors",
+        "kube-persistent-volume-filling-up",
+        "kube-persistent-volume-inodes-filling-up",
+        "kube-proxy-down",
+        "kube-scheduler-down",
+        "kube-statefulset-generation-mismatch",
+        "kube-statefulset-replicas-mismatch",
+        "kube-statefulset-update-not-rolled-out",
+        "kube-version-mismatch",
+        "kubelet-client-certificate-expiration",
+        "kubelet-client-certificate-renewal-errors",
+        "kubelet-down",
+        "kubelet-pod-startup-latency-high",
+        "kubelet-server-certificate-expiration",
+        "kubelet-server-certificate-renewal-errors",
+        "kubelet-too-many-pods"
+      ]
+    },
+    {
+      "domain": "blackbox",
+      "actionable_severities": [
+        "critical"
+      ],
+      "noop_severities": [
+        "warning"
+      ],
+      "workflow_refs": [
+        "poundcake.blackbox_service_down_evidence",
+        "poundcake.blackbox_service_down_remediation",
+        "poundcake.blackbox_service_down_verify_recovery"
+      ],
+      "alert_groups": [
+        "blackbox-service-down"
+      ]
+    },
+    {
+      "domain": "etcd",
+      "actionable_severities": [
+        "critical"
+      ],
+      "noop_severities": [
+        "warning"
+      ],
+      "workflow_prefix": "poundcake.etcd_",
+      "workflow_phases": [
+        "evidence",
+        "remediation",
+        "verify_recovery"
+      ],
+      "alert_groups": [
+        "etcd-database-high-fragmentation-ratio",
+        "etcd-database-quota-low-space",
+        "etcd-excessive-database-growth",
+        "etcd-grpc-requests-slow",
+        "etcd-high-commit-durations",
+        "etcd-high-fsync-durations",
+        "etcd-high-number-of-failed-grpc-requests",
+        "etcd-high-number-of-failed-proposals",
+        "etcd-high-number-of-leader-changes",
+        "etcd-insufficient-members",
+        "etcd-member-communication-slow",
+        "etcd-members-down",
+        "etcd-no-leader"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "capability_id": "stackstorm.workflow.blackbox.blackbox-service-down.evidence",
+      "workflow_ref": "poundcake.blackbox_service_down_evidence",
+      "domain": "blackbox",
+      "alert_groups": [
+        "blackbox-service-down"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "service",
+        "endpoint"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "instance",
+        "labels"
+      ],
+      "optional_inputs": [
+        "annotations",
+        "severity",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "method": "HEAD",
+        "timeout": 15,
+        "evidence": {}
+      },
+      "role": "gather_endpoint_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.blackbox.blackbox-service-down.remediation",
+      "workflow_ref": "poundcake.blackbox_service_down_remediation",
+      "domain": "blackbox",
+      "alert_groups": [
+        "blackbox-service-down"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "service",
+        "endpoint"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "instance",
+        "labels"
+      ],
+      "optional_inputs": [
+        "annotations",
+        "severity",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "method": "HEAD",
+        "timeout": 15,
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.blackbox.blackbox-service-down.verify_recovery",
+      "workflow_ref": "poundcake.blackbox_service_down_verify_recovery",
+      "domain": "blackbox",
+      "alert_groups": [
+        "blackbox-service-down"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "service",
+        "endpoint"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "instance",
+        "labels"
+      ],
+      "optional_inputs": [
+        "annotations",
+        "severity",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "method": "GET",
+        "timeout": 15,
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-database-high-fragmentation-ratio.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_database_high_fragmentation_ratio_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-database-high-fragmentation-ratio"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-database-high-fragmentation-ratio.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_database_high_fragmentation_ratio_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-database-high-fragmentation-ratio"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-database-high-fragmentation-ratio.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_database_high_fragmentation_ratio_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-database-high-fragmentation-ratio"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-database-quota-low-space.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_database_quota_low_space_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-database-quota-low-space"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-database-quota-low-space.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_database_quota_low_space_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-database-quota-low-space"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-database-quota-low-space.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_database_quota_low_space_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-database-quota-low-space"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-excessive-database-growth.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_excessive_database_growth_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-excessive-database-growth"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-excessive-database-growth.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_excessive_database_growth_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-excessive-database-growth"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-excessive-database-growth.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_excessive_database_growth_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-excessive-database-growth"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-grpc-requests-slow.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_grpc_requests_slow_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-grpc-requests-slow"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-grpc-requests-slow.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_grpc_requests_slow_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-grpc-requests-slow"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-grpc-requests-slow.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_grpc_requests_slow_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-grpc-requests-slow"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-commit-durations.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_high_commit_durations_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-commit-durations"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-commit-durations.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_high_commit_durations_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-commit-durations"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-commit-durations.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_high_commit_durations_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-commit-durations"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-fsync-durations.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_high_fsync_durations_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-fsync-durations"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-fsync-durations.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_high_fsync_durations_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-fsync-durations"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-fsync-durations.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_high_fsync_durations_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-fsync-durations"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-number-of-failed-grpc-requests.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_high_number_of_failed_grpc_requests_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-number-of-failed-grpc-requests"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-number-of-failed-grpc-requests.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_high_number_of_failed_grpc_requests_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-number-of-failed-grpc-requests"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-number-of-failed-grpc-requests.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_high_number_of_failed_grpc_requests_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-number-of-failed-grpc-requests"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-number-of-failed-proposals.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_high_number_of_failed_proposals_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-number-of-failed-proposals"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-number-of-failed-proposals.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_high_number_of_failed_proposals_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-number-of-failed-proposals"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-number-of-failed-proposals.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_high_number_of_failed_proposals_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-number-of-failed-proposals"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-number-of-leader-changes.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_high_number_of_leader_changes_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-number-of-leader-changes"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-number-of-leader-changes.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_high_number_of_leader_changes_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-number-of-leader-changes"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-high-number-of-leader-changes.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_high_number_of_leader_changes_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-high-number-of-leader-changes"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-insufficient-members.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_insufficient_members_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-insufficient-members"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-insufficient-members.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_insufficient_members_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-insufficient-members"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-insufficient-members.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_insufficient_members_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-insufficient-members"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-member-communication-slow.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_member_communication_slow_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-member-communication-slow"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-member-communication-slow.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_member_communication_slow_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-member-communication-slow"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-member-communication-slow.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_member_communication_slow_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-member-communication-slow"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-members-down.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_members_down_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-members-down"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-members-down.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_members_down_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-members-down"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-members-down.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_members_down_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-members-down"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-no-leader.evidence",
+      "workflow_ref": "poundcake.etcd_etcd_no_leader_evidence",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-no-leader"
+      ],
+      "phase": "evidence",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "gather_etcd_evidence",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-no-leader.remediation",
+      "workflow_ref": "poundcake.etcd_etcd_no_leader_remediation",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-no-leader"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 300,
+      "expected_secs": 30,
+      "timeout": 300
+    },
+    {
+      "capability_id": "stackstorm.workflow.etcd.etcd-no-leader.verify_recovery",
+      "workflow_ref": "poundcake.etcd_etcd_no_leader_verify_recovery",
+      "domain": "etcd",
+      "alert_groups": [
+        "etcd-no-leader"
+      ],
+      "phase": "verify_recovery",
+      "resource_kinds": [
+        "etcd_member",
+        "etcd_cluster"
+      ],
+      "required_inputs": [
+        "alert_name",
+        "labels"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "severity",
+        "annotations",
+        "instance",
+        "job",
+        "cluster",
+        "order_id",
+        "req_id",
+        "evidence"
+      ],
+      "defaults": {
+        "alert_name": "{{ order.raw_data.alertname }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "severity": "{{ order.labels.severity }}",
+        "instance": "{{ order.labels.instance }}",
+        "job": "{{ order.labels.job }}",
+        "cluster": "{{ order.labels.cluster }}",
+        "labels": "{{ order.labels }}",
+        "annotations": "{{ order.annotations }}",
+        "order_id": "{{ order.id }}",
+        "req_id": "{{ order.req_id }}",
+        "evidence": {}
+      },
+      "role": "verify_recovery",
+      "safety_class": "observe_only",
+      "requires_evidence": false,
+      "priority": 250,
+      "expected_secs": 30,
+      "timeout": 180
+    },
+    {
+      "capability_id": "stackstorm.workflow.kubernetes.host_down",
+      "workflow_ref": "poundcake.host_down_remediation",
+      "domain": "kubernetes",
+      "alert_groups": [
+        "kube-node-not-ready",
+        "kube-node-unreachable",
+        "kubelet-down"
+      ],
+      "phase": "remediation",
+      "resource_kinds": [
+        "node",
+        "host"
+      ],
+      "required_inputs": [
+        "host"
+      ],
+      "optional_inputs": [
+        "alert_group_name",
+        "order_id"
+      ],
+      "defaults": {
+        "host": "{{ order.labels.node }}",
+        "alert_group_name": "{{ order.alert_group_name }}",
+        "order_id": "{{ order.id }}"
+      },
+      "role": "action_alert",
+      "safety_class": "operator_guidance",
+      "requires_evidence": true,
+      "priority": 100,
+      "expected_secs": 60,
+      "timeout": 600
+    }
+  ]
+}
